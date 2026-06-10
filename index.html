@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="Cache-Control" content="no-store" />
+    <title>Trinity Financial Dashboard</title>
+    <link rel="stylesheet" href="./styles.css?v=20260610" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Primary">
+        <div class="brand">
+          <span class="brand-mark">TF</span>
+          <div>
+            <strong>Trinity</strong>
+            <span>Financial Ops</span>
+          </div>
+        </div>
+
+        <nav class="nav-tabs" aria-label="Dashboard sections">
+          <button class="nav-tab active" data-view="overview" type="button">Overview</button>
+          <button class="nav-tab" data-view="locations" type="button">Locations</button>
+          <button class="nav-tab" data-view="data" type="button">Data</button>
+          <button class="nav-tab" data-view="sync" type="button">Sync</button>
+        </nav>
+
+        <div class="sync-rail">
+          <span class="status-dot"></span>
+          <div>
+            <strong id="rail-sync-status">Healthy</strong>
+            <span id="rail-sync-time">Last sync pending</span>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Accounting dashboard</p>
+            <h1>Trinity Financial Dashboard</h1>
+          </div>
+
+          <div class="toolbar" aria-label="Dashboard filters">
+            <label>
+              <span>Period</span>
+              <select id="period-filter">
+                <option value="all">All months</option>
+              </select>
+            </label>
+
+            <label>
+              <span>Location</span>
+              <select id="location-filter">
+                <option value="all">All locations</option>
+              </select>
+            </label>
+
+            <button class="primary-action" id="manual-sync" type="button">Refresh data</button>
+          </div>
+        </header>
+
+        <section class="view active" id="overview-view" aria-labelledby="overview-heading">
+          <div class="section-heading">
+            <div>
+              <h2 id="overview-heading">Executive Snapshot</h2>
+              <p id="overview-subtitle">All locations, all available months</p>
+            </div>
+            <span class="data-source">Source: Google Sheet sample</span>
+          </div>
+
+          <div class="kpi-grid" id="kpi-grid"></div>
+
+          <div class="analytics-grid">
+            <section class="panel panel-wide">
+              <div class="panel-header">
+                <h3>Revenue And Profit Trend</h3>
+                <span>Monthly view</span>
+              </div>
+              <canvas id="trend-chart" height="260"></canvas>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <h3>Expense Mix</h3>
+                <span>Selected period</span>
+              </div>
+              <canvas id="expense-chart" height="260"></canvas>
+              <div class="legend" id="expense-legend"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <h3>Net Profit By Location</h3>
+                <span>Ranked</span>
+              </div>
+              <canvas id="location-profit-chart" height="300"></canvas>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <h3>Deposits Vs Debits</h3>
+                <span>Cash movement</span>
+              </div>
+              <canvas id="bank-chart" height="300"></canvas>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="locations-view" aria-labelledby="location-heading">
+          <div class="section-heading">
+            <div>
+              <h2 id="location-heading">Location Detail</h2>
+              <p>Compare one practice against the group.</p>
+            </div>
+            <select id="location-detail-filter"></select>
+          </div>
+
+          <div class="location-layout">
+            <section class="panel">
+              <div class="panel-header">
+                <h3 id="detail-location-name">Location</h3>
+                <span id="detail-location-month">Selected period</span>
+              </div>
+              <div class="detail-metrics" id="detail-metrics"></div>
+            </section>
+
+            <section class="panel panel-wide">
+              <div class="panel-header">
+                <h3>Cost Structure</h3>
+                <span>Operational categories</span>
+              </div>
+              <canvas id="cost-chart" height="300"></canvas>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="data-view" aria-labelledby="data-heading">
+          <div class="section-heading">
+            <div>
+              <h2 id="data-heading">Financial Rows</h2>
+              <p>Normalized location-month records used by the dashboard.</p>
+            </div>
+            <input id="table-search" type="search" placeholder="Search location" />
+          </div>
+
+          <div class="table-panel">
+            <table>
+              <thead>
+                <tr>
+                  <th>Location</th>
+                  <th>Month</th>
+                  <th>Revenue</th>
+                  <th>Gross Profit</th>
+                  <th>Net Profit</th>
+                  <th>GP %</th>
+                  <th>NP %</th>
+                  <th>Deposits</th>
+                  <th>Debits</th>
+                </tr>
+              </thead>
+              <tbody id="financial-table"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="view" id="sync-view" aria-labelledby="sync-heading">
+          <div class="section-heading">
+            <div>
+              <h2 id="sync-heading">Google Sheet Sync</h2>
+              <p>Latest dashboard refresh status and imported row count.</p>
+            </div>
+            <button class="secondary-action" id="sync-page-button" type="button">Refresh now</button>
+          </div>
+
+          <div class="sync-grid">
+            <section class="panel">
+              <div class="panel-header">
+                <h3>Current Status</h3>
+                <span id="sync-status-label">Healthy</span>
+              </div>
+              <dl class="sync-stats">
+                <div>
+                  <dt>Rows read</dt>
+                  <dd id="rows-read">0</dd>
+                </div>
+                <div>
+                  <dt>Rows changed</dt>
+                  <dd id="rows-changed">0</dd>
+                </div>
+                <div>
+                  <dt>Rows skipped</dt>
+                  <dd id="rows-skipped">0</dd>
+                </div>
+                <div>
+                  <dt>Last sync</dt>
+                  <dd id="last-sync">Pending</dd>
+                </div>
+              </dl>
+            </section>
+
+            <section class="panel panel-wide">
+              <div class="panel-header">
+                <h3>Recent Syncs</h3>
+                <span>Latest first</span>
+              </div>
+              <div class="sync-log" id="sync-log"></div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="./config.js?v=20260610"></script>
+    <script src="./app.js?v=20260610"></script>
+  </body>
+</html>
