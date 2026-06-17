@@ -99,6 +99,18 @@ const state = {
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 
+const htmlEntities = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;",
+};
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (character) => htmlEntities[character]);
+}
+
 function enrich(row) {
   const grossProfit = row.revenue - row.costOfService;
   const netProfit = grossProfit - row.totalExpense;
@@ -522,7 +534,7 @@ function drawInlineLegend(ctx, x, y, entries) {
   entries.forEach(([label, color]) => {
     ctx.fillStyle = color;
     ctx.fillRect(cursor, y - 9, 10, 10);
-    ctx.fillStyle = "#6a7580";
+    ctx.fillStyle = chartColors.muted;
     ctx.textAlign = "left";
     ctx.fillText(label, cursor + 15, y);
     cursor += ctx.measureText(label).width + 42;
@@ -538,17 +550,34 @@ function renderFilters() {
   const months = [...new Set(rows.map((row) => row.month))].sort();
   const locations = [...new Set(rows.map((row) => row.location))].sort();
 
-  $("#period-filter").innerHTML = `<option value="all">All months</option>${months
-    .map((month) => `<option value="${month}">${formatMonth(month)}</option>`)
+  if (state.period !== "all" && !months.includes(state.period)) {
+    state.period = "all";
+  }
+
+  if (state.location !== "all" && !locations.includes(state.location)) {
+    state.location = "all";
+  }
+
+  const periodOptions = `<option value="all">All months</option>${months
+    .map((month) => `<option value="${escapeHtml(month)}">${escapeHtml(formatMonth(month))}</option>`)
     .join("")}`;
+  if ($("#period-filter").innerHTML !== periodOptions) {
+    $("#period-filter").innerHTML = periodOptions;
+  }
 
   const locationOptions = `<option value="all">All locations</option>${locations
-    .map((location) => `<option value="${location}">${location}</option>`)
+    .map((location) => `<option value="${escapeHtml(location)}">${escapeHtml(location)}</option>`)
     .join("")}`;
-  $("#location-filter").innerHTML = locationOptions;
-  $("#location-detail-filter").innerHTML = locations
-    .map((location) => `<option value="${location}">${location}</option>`)
+  if ($("#location-filter").innerHTML !== locationOptions) {
+    $("#location-filter").innerHTML = locationOptions;
+  }
+
+  const detailOptions = locations
+    .map((location) => `<option value="${escapeHtml(location)}">${escapeHtml(location)}</option>`)
     .join("");
+  if ($("#location-detail-filter").innerHTML !== detailOptions) {
+    $("#location-detail-filter").innerHTML = detailOptions;
+  }
 
   if (!locations.includes(state.detailLocation)) {
     state.detailLocation = locations[0] || "";
@@ -585,9 +614,9 @@ function renderKpis(data) {
     .map(
       ([label, value, note]) => `
         <article class="kpi">
-          <span>${label}</span>
-          <strong>${value}</strong>
-          <small>${note}</small>
+          <span>${escapeHtml(label)}</span>
+          <strong>${escapeHtml(value)}</strong>
+          <small>${escapeHtml(note)}</small>
         </article>
       `,
     )
@@ -673,7 +702,7 @@ function renderLocationDetail() {
   ];
 
   $("#detail-metrics").innerHTML = metrics
-    .map(([label, value]) => `<div class="metric-row"><span>${label}</span><strong>${value}</strong></div>`)
+    .map(([label, value]) => `<div class="metric-row"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`)
     .join("");
 
   $("#cost-chart").dataset.chartHeight = "390";
@@ -700,15 +729,15 @@ function renderTable() {
       .map(
         (row) => `
         <tr>
-          <td>${row.location}</td>
-          <td>${formatMonth(row.month)}</td>
-          <td>${formatCurrency(row.revenue)}</td>
-          <td>${formatCurrency(row.grossProfit)}</td>
-          <td class="${row.netProfit >= 0 ? "positive" : "negative"}">${formatCurrency(row.netProfit)}</td>
-          <td>${formatPercent(row.grossProfitPct)}</td>
-          <td>${formatPercent(row.netProfitPct)}</td>
-          <td>${formatCurrency(row.bankDeposits)}</td>
-          <td>${formatCurrency(row.bankDebits)}</td>
+          <td data-label="Location">${escapeHtml(row.location)}</td>
+          <td data-label="Month">${escapeHtml(formatMonth(row.month))}</td>
+          <td data-label="Revenue">${escapeHtml(formatCurrency(row.revenue))}</td>
+          <td data-label="Gross Profit">${escapeHtml(formatCurrency(row.grossProfit))}</td>
+          <td data-label="Net Profit" class="${row.netProfit >= 0 ? "positive" : "negative"}">${escapeHtml(formatCurrency(row.netProfit))}</td>
+          <td data-label="GP %">${escapeHtml(formatPercent(row.grossProfitPct))}</td>
+          <td data-label="NP %">${escapeHtml(formatPercent(row.netProfitPct))}</td>
+          <td data-label="Deposits">${escapeHtml(formatCurrency(row.bankDeposits))}</td>
+          <td data-label="Debits">${escapeHtml(formatCurrency(row.bankDebits))}</td>
         </tr>
       `,
       )
@@ -717,31 +746,37 @@ function renderTable() {
 }
 
 function renderSync() {
+  const isHealthy = !state.loadError;
   const lastSyncText = state.lastSync.toLocaleString("en-US", {
     month: "short",
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
   });
+  $("#rail-sync-status").textContent = isHealthy ? "Healthy" : "Needs attention";
+  $("#sync-status-label").textContent = isHealthy ? "Healthy" : "Load issue";
+  $(".status-dot").classList.toggle("warning", !isHealthy);
   $("#rail-sync-time").textContent = `Last sync ${lastSyncText}`;
   $("#last-sync").textContent = lastSyncText;
   $("#rows-read").textContent = rows.length;
   $("#rows-changed").textContent = state.syncLog[0]?.changed ?? rows.length;
   $("#rows-skipped").textContent = "0";
-  $("#sync-log").innerHTML = state.syncLog
+  $("#sync-log").innerHTML = state.syncLog.length
+    ? state.syncLog
     .map(
       (entry) => `
         <div class="sync-entry">
           <div>
-            <strong>${entry.time}</strong>
-            <span>${entry.note}</span>
+            <strong>${escapeHtml(entry.time)}</strong>
+            <span>${escapeHtml(entry.note)}</span>
           </div>
-          <span>${entry.changed} changed</span>
-          <span class="pill success">Success</span>
+          <span>${escapeHtml(entry.changed)} changed</span>
+          <span class="pill ${isHealthy ? "success" : "warning"}">${isHealthy ? "Success" : "Review"}</span>
         </div>
       `,
     )
-    .join("");
+    .join("")
+    : `<div class="sync-entry sync-entry-empty"><div><strong>No refreshes yet</strong><span>Use Refresh data to load the latest sheet rows.</span></div></div>`;
 }
 
 function render() {
@@ -819,7 +854,12 @@ function bindEvents() {
 
   $("#manual-sync").addEventListener("click", runSyncSimulation);
   $("#sync-page-button").addEventListener("click", runSyncSimulation);
-  window.addEventListener("resize", render);
+
+  let resizeTimer = 0;
+  window.addEventListener("resize", () => {
+    window.clearTimeout(resizeTimer);
+    resizeTimer = window.setTimeout(render, 120);
+  });
 }
 
 async function loadOptionalConfig() {
