@@ -4,14 +4,18 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta http-equiv="Cache-Control" content="no-store" />
-    <title>Trinity Financials</title>
-    <link rel="stylesheet" href="./styles.css?v=20260617n" />
+    <title>Trinity Financial Dashboard</title>
+    <link rel="stylesheet" href="./styles.css?v=20260610" />
   </head>
   <body>
     <div class="app-shell">
-      <header class="site-header">
+      <aside class="sidebar" aria-label="Primary">
         <div class="brand">
-          <img class="brand-logo" src="./assets/logo.png" alt="Trinity Financials logo" />
+          <span class="brand-mark">TF</span>
+          <div>
+            <strong>Trinity</strong>
+            <span>Financial Ops</span>
+          </div>
         </div>
 
         <nav class="nav-tabs" aria-label="Dashboard sections">
@@ -21,14 +25,20 @@
           <button class="nav-tab" data-view="sync" type="button">Sync</button>
         </nav>
 
-      </header>
+        <div class="sync-rail">
+          <span class="status-dot"></span>
+          <div>
+            <strong id="rail-sync-status">Healthy</strong>
+            <span id="rail-sync-time">Last sync pending</span>
+          </div>
+        </div>
+      </aside>
 
       <main class="main">
         <header class="topbar">
           <div>
-            <p class="eyebrow">Sound familiar?</p>
-            <h1>Trinity Financials</h1>
-            <p class="hero-copy">A live financial command center for multi-location dental groups. Revenue, payroll, margins, deposits, and debits in one screen.</p>
+            <p class="eyebrow">Accounting dashboard</p>
+            <h1>Trinity Financial Dashboard</h1>
           </div>
 
           <div class="toolbar" aria-label="Dashboard filters">
@@ -67,7 +77,7 @@
                 <h3>Revenue And Profit Trend</h3>
                 <span>Monthly view</span>
               </div>
-              <canvas id="trend-chart" height="260" data-base-height="260"></canvas>
+              <canvas id="trend-chart" height="260"></canvas>
             </section>
 
             <section class="panel">
@@ -75,7 +85,7 @@
                 <h3>Expense Mix</h3>
                 <span>Selected period</span>
               </div>
-              <canvas id="expense-chart" height="260" data-base-height="260"></canvas>
+              <canvas id="expense-chart" height="260"></canvas>
               <div class="legend" id="expense-legend"></div>
             </section>
 
@@ -84,9 +94,7 @@
                 <h3>Net Profit By Location</h3>
                 <span>Ranked</span>
               </div>
-              <div class="chart-scroll chart-scroll-location">
-                <canvas id="location-profit-chart" height="300" data-base-height="300"></canvas>
-              </div>
+              <canvas id="location-profit-chart" height="300"></canvas>
             </section>
 
             <section class="panel">
@@ -94,9 +102,7 @@
                 <h3>Deposits Vs Debits</h3>
                 <span>Cash movement</span>
               </div>
-              <div class="chart-scroll chart-scroll-bank">
-                <canvas id="bank-chart" height="300" data-base-height="300"></canvas>
-              </div>
+              <canvas id="bank-chart" height="300"></canvas>
             </section>
           </div>
         </section>
@@ -124,7 +130,7 @@
                 <h3>Cost Structure</h3>
                 <span>Operational categories</span>
               </div>
-              <canvas id="cost-chart" height="300" data-base-height="300"></canvas>
+              <canvas id="cost-chart" height="300"></canvas>
             </section>
           </div>
         </section>
@@ -203,17 +209,9 @@
           </div>
         </section>
       </main>
-
-      <div class="sync-rail" aria-live="polite">
-        <span class="status-dot"></span>
-        <div>
-          <strong id="rail-sync-status">Healthy</strong>
-          <span id="rail-sync-time">Last sync pending</span>
-        </div>
-      </div>
     </div>
 
-    <script src="./config.js?v=20260617n"></script>
-    <script src="./app.js?v=20260617n"></script>
+    <script src="./config.js?v=20260610"></script>
+    <script src="./app.js?v=20260610"></script>
   </body>
 </html>

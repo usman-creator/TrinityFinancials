@@ -71,17 +71,17 @@ const sampleRows = [
 ];
 
 const chartColors = {
-  revenue: "#047857",
-  grossProfit: "#0d9488",
-  netProfit: "#10b981",
-  expense: "#d97706",
-  debits: "#dc4c5c",
-  payroll: "#2563eb",
-  rent: "#0891b2",
-  supplies: "#64748b",
-  muted: "#5f746f",
-  grid: "#dcece6",
-  text: "#10231f",
+  revenue: "#d8ff63",
+  grossProfit: "#2dd4bf",
+  netProfit: "#7ddf64",
+  expense: "#f0b35a",
+  debits: "#f87171",
+  payroll: "#a78bfa",
+  rent: "#38bdf8",
+  supplies: "#94a3b8",
+  muted: "#8fa0ac",
+  grid: "rgba(210, 232, 225, 0.12)",
+  text: "#eef7f2",
 };
 
 const state = {
@@ -204,20 +204,14 @@ function drawChart(canvasId, draw) {
   if (!canvas) return false;
   const rect = canvas.getBoundingClientRect();
   if (rect.width < 20 || rect.height === 0) return false;
-
-  if (!canvas.dataset.baseHeight) {
-    canvas.dataset.baseHeight = String(Number(canvas.getAttribute("height")) || 280);
-  }
-
   const scale = window.devicePixelRatio || 1;
   const cssWidth = Math.max(300, rect.width);
-  const cssHeight = Number(canvas.dataset.chartHeight || canvas.dataset.baseHeight || 280);
-  canvas.style.width = "100%";
+  const cssHeight = Number(canvas.dataset.chartHeight || canvas.getAttribute("height") || 280);
+  canvas.width = cssWidth * scale;
+  canvas.height = cssHeight * scale;
   canvas.style.height = `${cssHeight}px`;
-  canvas.width = Math.round(cssWidth * scale);
-  canvas.height = Math.round(cssHeight * scale);
   const ctx = canvas.getContext("2d");
-  ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  ctx.scale(scale, scale);
   ctx.clearRect(0, 0, cssWidth, cssHeight);
   draw(ctx, cssWidth, cssHeight);
   return true;
@@ -227,7 +221,7 @@ function drawGrid(ctx, width, height, padding) {
   ctx.strokeStyle = chartColors.grid;
   ctx.lineWidth = 1;
   ctx.font = "12px Inter, sans-serif";
-  ctx.fillStyle = chartColors.muted;
+  ctx.fillStyle = "#6a7580";
   for (let i = 0; i <= 4; i += 1) {
     const y = padding.top + ((height - padding.top - padding.bottom) / 4) * i;
     ctx.beginPath();
@@ -238,7 +232,7 @@ function drawGrid(ctx, width, height, padding) {
 }
 
 function drawEmptyState(ctx, width, height, message = "No data for this selection") {
-  ctx.fillStyle = "#effbf6";
+  ctx.fillStyle = "#eef3f5";
   ctx.fillRect(0, 0, width, height);
   ctx.fillStyle = chartColors.muted;
   ctx.font = "600 13px Inter, sans-serif";
@@ -283,7 +277,7 @@ function drawLineChart(canvasId, data) {
     const chartHeight = height - padding.top - padding.bottom;
     drawGrid(ctx, width, height, padding);
 
-    ctx.fillStyle = chartColors.muted;
+    ctx.fillStyle = "#6a7580";
     ctx.textAlign = "right";
     ctx.font = "11px Inter, sans-serif";
     for (let i = 0; i <= 4; i += 1) {
@@ -354,7 +348,7 @@ function drawLineChart(canvasId, data) {
     drawSeries("grossProfit", chartColors.grossProfit);
     drawSeries("netProfit", chartColors.netProfit);
 
-    ctx.fillStyle = chartColors.muted;
+    ctx.fillStyle = "#6a7580";
     ctx.textAlign = "center";
     months.forEach((month, index) => {
       const p = point(0, index);
@@ -376,27 +370,19 @@ function drawBarChart(canvasId, data, options = {}) {
       return;
     }
 
-    const padding = { top: 18, right: 96, bottom: 24, left: Math.min(178, Math.max(126, width * 0.34)) };
+    const padding = { top: 14, right: 92, bottom: 24, left: Math.min(150, Math.max(106, width * 0.32)) };
     const chartWidth = width - padding.left - padding.right;
-    const rowHeight = Math.max(44, (height - padding.top - padding.bottom) / Math.max(data.length, 1));
+    const rowHeight = Math.max(38, (height - padding.top - padding.bottom) / Math.max(data.length, 1));
     const maxValue = Math.max(...data.map((item) => Math.abs(item.value)), 1);
     ctx.font = "12px Inter, sans-serif";
 
     data.forEach((item, index) => {
-      const y = padding.top + index * rowHeight + 10;
+      const y = padding.top + index * rowHeight + 8;
       const barWidth = (Math.abs(item.value) / maxValue) * chartWidth;
-
-      if (index % 2 === 0) {
-        ctx.fillStyle = "#f3fbf7";
-        roundedRect(ctx, 0, padding.top + index * rowHeight + 3, width, rowHeight - 6, 8);
-        ctx.fill();
-      }
-
       ctx.fillStyle = chartColors.text;
       ctx.textAlign = "left";
-      ctx.font = "600 12px Inter, sans-serif";
-      ctx.fillText(shortLabel(item.label, width < 520 ? 17 : 24), 10, y + 15);
-      ctx.fillStyle = "#e7f3ee";
+      ctx.fillText(shortLabel(item.label, width < 520 ? 17 : 22), 8, y + 15);
+      ctx.fillStyle = "#eef3f5";
       roundedRect(ctx, padding.left, y, chartWidth, 18, 4);
       ctx.fill();
       ctx.fillStyle = item.value >= 0 ? options.color || chartColors.grossProfit : chartColors.debits;
@@ -404,7 +390,6 @@ function drawBarChart(canvasId, data, options = {}) {
       ctx.fill();
       ctx.fillStyle = chartColors.text;
       ctx.textAlign = "right";
-      ctx.font = "600 12px Inter, sans-serif";
       ctx.fillText(options.percent ? formatPercent(item.value) : formatCompactCurrency(item.value), width - 8, y + 15);
     });
   });
@@ -417,18 +402,13 @@ function drawGroupedBankChart(canvasId, data) {
       return;
     }
 
-    const padding = {
-      top: 42,
-      right: Math.min(132, Math.max(96, width * 0.18)),
-      bottom: 24,
-      left: Math.min(210, Math.max(136, width * 0.34)),
-    };
+    const padding = { top: 34, right: 86, bottom: 24, left: Math.min(158, Math.max(112, width * 0.32)) };
     const chartWidth = width - padding.left - padding.right;
     const chartHeight = height - padding.top - padding.bottom;
     const maxValue = Math.max(...data.flatMap((item) => [item.deposits, item.debits]), 1);
     const rowHeight = chartHeight / Math.max(data.length, 1);
-    const barHeight = Math.max(10, Math.min(14, rowHeight * 0.27));
-    const barGap = Math.max(5, Math.min(8, rowHeight * 0.15));
+    const barHeight = Math.max(9, Math.min(15, rowHeight * 0.25));
+    const barGap = Math.max(5, rowHeight * 0.09);
 
     data.forEach((item, index) => {
       const groupY = padding.top + index * rowHeight + rowHeight / 2;
@@ -437,32 +417,26 @@ function drawGroupedBankChart(canvasId, data) {
       const depositsWidth = (item.deposits / maxValue) * chartWidth;
       const debitsWidth = (item.debits / maxValue) * chartWidth;
 
-      if (index % 2 === 0) {
-        ctx.fillStyle = "#f3fbf7";
-        roundedRect(ctx, 0, padding.top + index * rowHeight + 2, width, Math.max(24, rowHeight - 4), 8);
-        ctx.fill();
-      }
-
       ctx.fillStyle = chartColors.muted;
       ctx.textAlign = "left";
-      ctx.font = "600 12px Inter, sans-serif";
-      ctx.fillText(shortLabel(item.label.replace("Trinity ", ""), width < 560 ? 16 : 24), 12, groupY + 4);
+      ctx.font = "12px Inter, sans-serif";
+      ctx.fillText(shortLabel(item.label.replace("Trinity ", ""), width < 520 ? 14 : 18), 8, groupY + 4);
 
-      ctx.fillStyle = "#e7f3ee";
-      roundedRect(ctx, padding.left, depositY, chartWidth, barHeight, 5);
+      ctx.fillStyle = "rgba(216, 255, 99, 0.08)";
+      roundedRect(ctx, padding.left, depositY, chartWidth, barHeight, 4);
       ctx.fill();
-      roundedRect(ctx, padding.left, debitY, chartWidth, barHeight, 5);
+      roundedRect(ctx, padding.left, debitY, chartWidth, barHeight, 4);
       ctx.fill();
 
       ctx.fillStyle = chartColors.grossProfit;
-      roundedRect(ctx, padding.left, depositY, Math.max(3, depositsWidth), barHeight, 5);
+      roundedRect(ctx, padding.left, depositY, Math.max(2, depositsWidth), barHeight, 4);
       ctx.fill();
       ctx.fillStyle = chartColors.debits;
-      roundedRect(ctx, padding.left, debitY, Math.max(3, debitsWidth), barHeight, 5);
+      roundedRect(ctx, padding.left, debitY, Math.max(2, debitsWidth), barHeight, 4);
       ctx.fill();
 
       ctx.textAlign = "right";
-      ctx.font = "600 11px Inter, sans-serif";
+      ctx.font = "11px Inter, sans-serif";
       ctx.fillStyle = chartColors.text;
       ctx.fillText(formatCompactCurrency(item.deposits), width - 8, depositY + barHeight - 2);
       ctx.fillStyle = chartColors.muted;
@@ -612,7 +586,7 @@ function renderOverview() {
   drawLineChart("trend-chart", data);
 
   const expenseEntries = [
-    ["Cost of Service", sum(data, "costOfService"), "#0f766e"],
+    ["Cost of Service", sum(data, "costOfService"), "#2563eb"],
     ["Employee Payroll", sum(data, "employeePayroll"), chartColors.grossProfit],
     ["Doctor Payroll", sum(data, "doctorPayroll"), chartColors.payroll],
     ["Rent", sum(data, "rent"), chartColors.rent],
@@ -638,7 +612,6 @@ function renderOverview() {
   const byLocation = Object.entries(groupedBy(data, "location"))
     .map(([location, items]) => ({ label: location, value: sum(items, "netProfit") }))
     .sort((a, b) => b.value - a.value);
-  $("#location-profit-chart").dataset.chartHeight = String(Math.max(360, byLocation.length * 48 + 54));
   drawBarChart("location-profit-chart", byLocation, { color: chartColors.netProfit });
 
   const bankData = Object.entries(groupedBy(data, "location")).map(([location, items]) => ({
@@ -646,7 +619,6 @@ function renderOverview() {
     deposits: sum(items, "bankDeposits"),
     debits: sum(items, "bankDebits"),
   }));
-  $("#bank-chart").dataset.chartHeight = String(Math.max(420, bankData.length * 48 + 66));
   drawGroupedBankChart("bank-chart", bankData);
 }
 
@@ -752,14 +724,10 @@ function render() {
 }
 
 async function runSyncSimulation() {
-  const scrollX = window.scrollX;
-  const scrollY = window.scrollY < 140 ? 0 : window.scrollY;
-  const restoreScroll = () => window.scrollTo(scrollX, scrollY);
   const now = new Date();
   state.lastSync = now;
-  restoreScroll();
   await loadLiveData();
-  state.syncLog = [{
+  state.syncLog.unshift({
     time: now.toLocaleString("en-US", {
       month: "short",
       day: "numeric",
@@ -774,15 +742,10 @@ async function runSyncSimulation() {
         : state.dataMode === "sheet"
           ? "Dashboard refreshed from the public Google Sheet export."
           : "Sample workbook rows loaded as a fallback.",
-  }];
-  render();
-  restoreScroll();
-  requestAnimationFrame(() => {
-    restoreScroll();
-    requestAnimationFrame(restoreScroll);
   });
-  setTimeout(restoreScroll, 100);
-  setTimeout(restoreScroll, 400);
+  state.syncLog = state.syncLog.slice(0, 5);
+  renderSync();
+  render();
 }
 
 function bindEvents() {
@@ -826,12 +789,8 @@ async function loadOptionalConfig() {
 }
 
 async function loadLiveData() {
-  const sheetLoaded = await loadPublicSheetData();
-  if (sheetLoaded) {
-    return;
-  }
-
   if (!dashboardConfig?.supabaseUrl || !dashboardConfig?.supabaseAnonKey) {
+    await loadPublicSheetData();
     return;
   }
 
@@ -881,12 +840,10 @@ async function loadPublicSheetData() {
     rows = parsedRows.map(enrich);
     state.dataMode = "sheet";
     state.loadError = null;
-    return true;
   } catch (error) {
     rows = sampleRows.map(enrich);
     state.dataMode = "sample";
     state.loadError = error instanceof Error ? error.message : String(error);
-    return false;
   }
 }
 
