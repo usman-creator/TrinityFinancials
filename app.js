@@ -676,6 +676,7 @@ function renderLocationDetail() {
     .map(([label, value]) => `<div class="metric-row"><span>${label}</span><strong>${value}</strong></div>`)
     .join("");
 
+  $("#cost-chart").dataset.chartHeight = "390";
   drawBarChart(
     "cost-chart",
     [
