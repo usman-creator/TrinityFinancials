@@ -72,13 +72,19 @@ const sampleRows = [
 
 const chartColors = {
   revenue: "#047857",
-  grossProfit: "#0d9488",
-  netProfit: "#10b981",
-  expense: "#d97706",
-  debits: "#dc4c5c",
-  payroll: "#2563eb",
+  grossProfit: "#2563eb",
+  netProfit: "#f59e0b",
+  expense: "#ea580c",
+  debits: "#dc2626",
+  payroll: "#7c3aed",
   rent: "#0891b2",
   supplies: "#64748b",
+  costOfService: "#0f766e",
+  employeePayroll: "#16a34a",
+  doctorPayroll: "#2563eb",
+  utilities: "#d97706",
+  labFee: "#e11d48",
+  bankDeposits: "#10b981",
   muted: "#5f746f",
   grid: "#dcece6",
   text: "#10231f",
@@ -411,7 +417,7 @@ function drawBarChart(canvasId, data, options = {}) {
       ctx.fillStyle = "#e7f3ee";
       roundedRect(ctx, padding.left, y, chartWidth, 18, 4);
       ctx.fill();
-      ctx.fillStyle = item.value >= 0 ? options.color || chartColors.grossProfit : chartColors.debits;
+      ctx.fillStyle = item.color || (item.value >= 0 ? options.color || chartColors.grossProfit : chartColors.debits);
       roundedRect(ctx, padding.left, y, Math.max(2, barWidth), 18, 4);
       ctx.fill();
       ctx.fillStyle = chartColors.text;
@@ -466,7 +472,7 @@ function drawGroupedBankChart(canvasId, data) {
       roundedRect(ctx, padding.left, debitY, chartWidth, barHeight, 5);
       ctx.fill();
 
-      ctx.fillStyle = chartColors.grossProfit;
+      ctx.fillStyle = chartColors.bankDeposits;
       roundedRect(ctx, padding.left, depositY, Math.max(3, depositsWidth), barHeight, 5);
       ctx.fill();
       ctx.fillStyle = chartColors.debits;
@@ -482,7 +488,7 @@ function drawGroupedBankChart(canvasId, data) {
     });
 
     drawInlineLegend(ctx, padding.left, 14, [
-      ["Deposits", chartColors.grossProfit],
+      ["Deposits", chartColors.bankDeposits],
       ["Debits", chartColors.debits],
     ]);
   });
@@ -641,13 +647,13 @@ function renderOverview() {
   drawLineChart("trend-chart", data);
 
   const expenseEntries = [
-    ["Cost of Service", sum(data, "costOfService"), "#0f766e"],
-    ["Employee Payroll", sum(data, "employeePayroll"), chartColors.grossProfit],
-    ["Doctor Payroll", sum(data, "doctorPayroll"), chartColors.payroll],
+    ["Cost of Service", sum(data, "costOfService"), chartColors.costOfService],
+    ["Employee Payroll", sum(data, "employeePayroll"), chartColors.employeePayroll],
+    ["Doctor Payroll", sum(data, "doctorPayroll"), chartColors.doctorPayroll],
     ["Rent", sum(data, "rent"), chartColors.rent],
     ["Supplies", sum(data, "supplies"), chartColors.supplies],
-    ["Utilities", sum(data, "utilities"), chartColors.expense],
-    ["Lab Fee", sum(data, "labFee"), chartColors.debits],
+    ["Utilities", sum(data, "utilities"), chartColors.utilities],
+    ["Lab Fee", sum(data, "labFee"), chartColors.labFee],
   ].filter((entry) => entry[1] > 0);
 
   drawDonutChart(
@@ -709,13 +715,13 @@ function renderLocationDetail() {
   drawBarChart(
     "cost-chart",
     [
-      { label: "Cost of Service", value: current.costOfService },
-      { label: "Employee Payroll", value: current.employeePayroll },
-      { label: "Doctor Payroll", value: current.doctorPayroll },
-      { label: "Rent", value: current.rent },
-      { label: "Supplies", value: current.supplies },
-      { label: "Utilities", value: current.utilities },
-      { label: "Lab Fee", value: current.labFee },
+      { label: "Cost of Service", value: current.costOfService, color: chartColors.costOfService },
+      { label: "Employee Payroll", value: current.employeePayroll, color: chartColors.employeePayroll },
+      { label: "Doctor Payroll", value: current.doctorPayroll, color: chartColors.doctorPayroll },
+      { label: "Rent", value: current.rent, color: chartColors.rent },
+      { label: "Supplies", value: current.supplies, color: chartColors.supplies },
+      { label: "Utilities", value: current.utilities, color: chartColors.utilities },
+      { label: "Lab Fee", value: current.labFee, color: chartColors.labFee },
     ],
     { color: chartColors.expense },
   );
